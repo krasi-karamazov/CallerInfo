@@ -7,7 +7,7 @@ import android.util.Log;
  */
 public class CallerInfoLog {
 
-    public static String LOG_TAG = "DoTopia";
+    public static String LOG_TAG = "CallerInfo";
 
     public static void d(String msg){
         if(Constants.DEBUG){

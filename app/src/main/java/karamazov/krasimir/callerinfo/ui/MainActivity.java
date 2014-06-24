@@ -33,13 +33,11 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 final SharedPreferences.Editor editor = mPreferences.edit();
-                Intent intent = new Intent(MainActivity.this, CallInterceptorService.class);
                 if(checked) {
                     editor.putBoolean(Constants.SERVICE_ENABLED_KEY, true);
-                    startService(intent);
+
                 }else{
                     editor.putBoolean(Constants.SERVICE_ENABLED_KEY, false);
-                    stopService(intent);
                 }
                 editor.commit();
             }
