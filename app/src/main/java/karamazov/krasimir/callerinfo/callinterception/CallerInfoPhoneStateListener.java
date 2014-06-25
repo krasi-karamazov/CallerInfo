@@ -25,35 +25,30 @@ public class CallerInfoPhoneStateListener extends PhoneStateListener {
         super.onCallStateChanged(state, incomingNumber);
         Intent intent = new Intent(mContext, CallInterceptorService.class);
         CallerInfoLog.d("State " + state);
-        /*if(state == TelephonyManager.CALL_STATE_RINGING) {
-            intent.putExtra(CallInterceptorService.INCOMING_NUMBER_KEY, incomingNumber);
-            mContext.startService(intent);
-            CallerInfoLog.d("Ring");
-        }else{
-            mContext.stopService(intent);
-            CallerInfoLog.d("ELSE");
-        }*/
+
         switch(state){
             case TelephonyManager.CALL_STATE_RINGING:
-
+                CallerInfoLog.d("State ringing");
                 wasRinging = true;
                 mContext.startService(intent);
                 break;
             case TelephonyManager.CALL_STATE_OFFHOOK:
 
-
+                CallerInfoLog.d("State offhook");
                 if (!wasRinging) {
-                    // Start your new activity
+                    mContext.stopService(intent);
                 } else {
                     mContext.stopService(intent);
                 }
 
-                // this should be the last piece of code before the break
                 wasRinging = true;
                 break;
             case TelephonyManager.CALL_STATE_IDLE:
+                CallerInfoLog.d("State idle");
                 mContext.stopService(intent);
-                // this should be the last piece of code before the break
+                if(wasRinging){
+                    mContext.stopService(intent);
+                }
                 wasRinging = true;
                 break;
         }

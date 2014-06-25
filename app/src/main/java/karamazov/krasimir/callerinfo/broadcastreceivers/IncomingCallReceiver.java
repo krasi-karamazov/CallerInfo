@@ -17,7 +17,6 @@ public class IncomingCallReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        telephonyManager.listen(new CallerInfoPhoneStateListener(context), PhoneStateListener.LISTEN_CALL_STATE);
+
     }
 }

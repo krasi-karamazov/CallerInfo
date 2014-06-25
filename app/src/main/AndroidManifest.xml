@@ -19,9 +19,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.InfoActivity"
-            android:theme="@android:style/Theme.Dialog">
-        </activity>
+
         <service android:name=".services.CallInterceptorService"
             android:enabled="true"
             android:exported="false"/>
