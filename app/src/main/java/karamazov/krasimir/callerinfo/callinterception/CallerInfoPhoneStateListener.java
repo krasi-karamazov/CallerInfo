@@ -24,7 +24,7 @@ public class CallerInfoPhoneStateListener extends PhoneStateListener {
     public void onCallStateChanged(int state, String incomingNumber) {
         super.onCallStateChanged(state, incomingNumber);
         Intent intent = new Intent(mContext, CallInterceptorService.class);
-        CallerInfoLog.d("State " + state);
+        intent.putExtra(CallInterceptorService.INCOMING_NUMBER_KEY, incomingNumber);
 
         switch(state){
             case TelephonyManager.CALL_STATE_RINGING:

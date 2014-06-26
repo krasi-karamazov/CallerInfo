@@ -2,13 +2,19 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <TextView
-        android:id="@+id/tv_info"
+    android:layout_marginRight="10dp" android:layout_marginLeft="10dp"
+    android:layout_height="200dp"
+    android:background="@android:color/white"
+    android:padding="30dp">
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="@android:color/black"
-        android:textSize="15sp"
-        android:layout_centerInParent="true"
-        android:text="jfhjskhfhsjkfhjsdhfjksdf"/>
+        android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/tv_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:textSize="15sp"/>
+    </ScrollView>
+
 </RelativeLayout>

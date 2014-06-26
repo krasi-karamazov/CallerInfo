@@ -6,7 +6,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,9 +34,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.net.ssl.HttpsURLConnection;
-
 import karamazov.krasimir.callerinfo.R;
 import karamazov.krasimir.callerinfo.utils.CallerInfoLog;
 import karamazov.krasimir.callerinfo.utils.Constants;
@@ -46,12 +46,13 @@ public class CallInterceptorService extends Service {
 
     private View mView;
     private TextView mInfoTextView;
+    private Handler mHandler;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         SharedPreferences prefs = getApplicationContext().getSharedPreferences(Constants.CALLERINFOPREFS_FILE_NAME, Context.MODE_PRIVATE);
         if(prefs.contains(Constants.SERVICE_ENABLED_KEY) && prefs.getBoolean(Constants.SERVICE_ENABLED_KEY, false)) {
-
+            mHandler = new Handler(Looper.getMainLooper());
             WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, 0, 0, WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY, 0, PixelFormat.TRANSLUCENT);
             params.gravity = Gravity.CENTER_HORIZONTAL | Gravity.CENTER_HORIZONTAL;
 
@@ -62,7 +63,12 @@ public class CallInterceptorService extends Service {
                 mInfoTextView = (TextView)mView.findViewById(R.id.tv_info);
                 wm.addView(mView, params);
             }
-            new GetInfoByNumberTask().execute("0888888888");
+
+            String phoneNumber = intent.getStringExtra(INCOMING_NUMBER_KEY);
+            if(TextUtils.isEmpty(phoneNumber)) {
+                phoneNumber = "0888888888";
+            }
+            new GetInfoByNumberTask().execute(phoneNumber);
 
         }
         return START_STICKY;
@@ -102,7 +108,7 @@ public class CallInterceptorService extends Service {
 
                 List<NameValuePair> params = new ArrayList<NameValuePair>();
                 params.add(new BasicNameValuePair("param1", "12312"));
-                params.add(new BasicNameValuePair("param2", "0888888888"));
+                params.add(new BasicNameValuePair("param2", strings[0]));
                 params.add(new BasicNameValuePair("param3", "715275712312"));
 
                 OutputStream os = conn.getOutputStream();
@@ -115,12 +121,17 @@ public class CallInterceptorService extends Service {
 
                 InputStream stream = conn.getInputStream();
                 byte[] buffer = new byte[1024];
-                StringBuilder builder = new StringBuilder();
+                final StringBuilder builder = new StringBuilder();
                 while((stream.read(buffer)) != -1) {
                     builder.append(new String(buffer, "UTF-8"));
                 }
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mInfoTextView.setText(builder.toString());
+                    }
+                });
 
-                mInfoTextView.setText(builder.toString());
             }catch(Exception e){
                 e.printStackTrace();
             }
