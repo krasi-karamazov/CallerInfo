@@ -9,11 +9,17 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.text.Html;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.apache.http.HttpResponse;
@@ -24,8 +30,10 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
@@ -47,19 +55,29 @@ public class CallInterceptorService extends Service {
     private View mView;
     private TextView mInfoTextView;
     private Handler mHandler;
+    private ScrollView mScrollContainer;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         SharedPreferences prefs = getApplicationContext().getSharedPreferences(Constants.CALLERINFOPREFS_FILE_NAME, Context.MODE_PRIVATE);
         if(prefs.contains(Constants.SERVICE_ENABLED_KEY) && prefs.getBoolean(Constants.SERVICE_ENABLED_KEY, false)) {
             mHandler = new Handler(Looper.getMainLooper());
-            WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, 0, 0, WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY, 0, PixelFormat.TRANSLUCENT);
-            params.gravity = Gravity.CENTER_HORIZONTAL | Gravity.CENTER_HORIZONTAL;
-
+            WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, 0, 10, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, 0, PixelFormat.TRANSLUCENT);
+            params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    |WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+                    |WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
             WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
             if(mView == null){
                 final LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 mView = inflater.inflate(R.layout.activity_info, null);
+                mScrollContainer = (ScrollView)mView.findViewById(R.id.sc_content_container);
+                DisplayMetrics metrics = new DisplayMetrics();
+                wm.getDefaultDisplay().getMetrics(metrics);
+                int height = metrics.heightPixels / 3;
+                final RelativeLayout.LayoutParams contentParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, height);
+                mScrollContainer.setLayoutParams(contentParams);
+                final ImageView ivClose = (ImageView)mView.findViewById(R.id.iv_close);
+                ivClose.setOnClickListener(getOnClickListener());
                 mInfoTextView = (TextView)mView.findViewById(R.id.tv_info);
                 wm.addView(mView, params);
             }
@@ -72,6 +90,16 @@ public class CallInterceptorService extends Service {
 
         }
         return START_STICKY;
+    }
+
+    private View.OnClickListener getOnClickListener() {
+        return new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
+                wm.removeView(mView);
+            }
+        };
     }
 
     private String getQuery(List<NameValuePair> params) throws UnsupportedEncodingException
@@ -98,7 +126,7 @@ public class CallInterceptorService extends Service {
         @Override
         protected String doInBackground(String... strings) {
             try{
-                URL url = new URL("http://www.estateassistant.eu/PhoneCallInfo/WebService1.ashx");
+                URL url = new URL("http://www.estateassistant.eu/PhoneCallInfo/WebService2.ashx");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setReadTimeout(10000);
                 conn.setConnectTimeout(15000);
@@ -120,15 +148,18 @@ public class CallInterceptorService extends Service {
                 os.close();
 
                 InputStream stream = conn.getInputStream();
-                byte[] buffer = new byte[1024];
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
                 final StringBuilder builder = new StringBuilder();
-                while((stream.read(buffer)) != -1) {
-                    builder.append(new String(buffer, "UTF-8"));
+                String str;
+                while((str = reader.readLine()) != null) {
+                    builder.append(str);
                 }
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        mInfoTextView.setText(builder.toString());
+                        Spanned htmlContent = Html.fromHtml(builder.toString());
+                        mInfoTextView.setText(htmlContent);
+                        mScrollContainer.requestLayout();
                     }
                 });
 
