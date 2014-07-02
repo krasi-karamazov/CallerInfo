@@ -2,7 +2,6 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_marginRight="10dp" android:layout_marginLeft="10dp"
     android:layout_height="wrap_content"
     android:padding="5dp"
     android:background="@android:color/white">
@@ -10,8 +9,15 @@
         android:id="@+id/iv_close"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="12dp"
+        android:layout_gravity="right"
         android:src="@android:drawable/ic_delete"/>
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminate="true"/>
     <ScrollView
         android:id="@+id/sc_content_container"
         android:layout_width="match_parent"
@@ -20,6 +26,7 @@
         android:orientation="vertical"
         android:scrollbars="vertical"
         android:scrollbarAlwaysDrawVerticalTrack="true"
+        android:visibility="gone"
         android:fillViewport="true">
         <LinearLayout
             android:layout_width="match_parent"
