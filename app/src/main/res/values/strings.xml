@@ -6,5 +6,6 @@
     <string name="action_settings">Settings</string>
     <string name="settings_label">Should I intercept incoming phone calls?</string>
     <string name="close_label">Close</string>
-
+    <string name="offset_percent_label">Offset from top (%)</string>
+    <string name="done">Done</string>
 </resources>

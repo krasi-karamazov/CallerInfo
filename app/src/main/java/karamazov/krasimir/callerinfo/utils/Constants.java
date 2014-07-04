@@ -8,4 +8,5 @@ public class Constants {
     public static final boolean DEBUG = true;
     public static final String CALLERINFOPREFS_FILE_NAME = "Callerinfoprefs";
     public static final String SERVICE_ENABLED_KEY = "CallerInfoServiceEnabled";
+    public static final String PERCENT_OFFSET_KEY = "PercentOffset";
 }

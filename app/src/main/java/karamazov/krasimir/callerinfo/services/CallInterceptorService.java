@@ -8,9 +8,7 @@ import android.graphics.PixelFormat;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.text.Html;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -22,18 +20,10 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-
-import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStream;
@@ -66,19 +56,31 @@ public class CallInterceptorService extends Service {
         if(isConnectedToInternet()){
             SharedPreferences prefs = getApplicationContext().getSharedPreferences(Constants.CALLERINFOPREFS_FILE_NAME, Context.MODE_PRIVATE);
             if(prefs.contains(Constants.SERVICE_ENABLED_KEY) && prefs.getBoolean(Constants.SERVICE_ENABLED_KEY, false)) {
-                WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT, 0, 10, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, 0, PixelFormat.TRANSLUCENT);
+                WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
+                final DisplayMetrics metrics = new DisplayMetrics();
+                wm.getDefaultDisplay().getMetrics(metrics);
+                int offset = 0;
+                if(prefs.contains(Constants.PERCENT_OFFSET_KEY)){
+                    int offsetPercent = prefs.getInt(Constants.PERCENT_OFFSET_KEY, 0);
+                    int screenHeight = metrics.heightPixels;
+                    Double offsetDouble = (double)screenHeight * ((double)offsetPercent / (double)100);
+                    offset  = offsetDouble.intValue();
+                }
+
+                WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT, 0, offset, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, 0, PixelFormat.TRANSLUCENT);
                 params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                         |WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
                         |WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
-                WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
-                params.gravity = Gravity.TOP;
+
+
+                params.gravity = Gravity.TOP | Gravity.LEFT;
+
                 if(mView == null){
                     final LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                     mView = inflater.inflate(R.layout.activity_info, null);
                     mProgressBar = (ProgressBar)mView.findViewById(R.id.progress_bar);
                     mScrollContainer = (ScrollView)mView.findViewById(R.id.sc_content_container);
-                    DisplayMetrics metrics = new DisplayMetrics();
-                    wm.getDefaultDisplay().getMetrics(metrics);
+
                     int height = metrics.heightPixels / 3;
                     final LinearLayout.LayoutParams contentParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, height);
                     mScrollContainer.setLayoutParams(contentParams);
@@ -89,11 +91,8 @@ public class CallInterceptorService extends Service {
                 }
 
                 String phoneNumber = intent.getStringExtra(INCOMING_NUMBER_KEY);
-                if(TextUtils.isEmpty(phoneNumber)) {
-                    phoneNumber = "0888888888";
-                }
-                new GetInfoByNumberTask().execute(phoneNumber);
 
+                new GetInfoByNumberTask().execute(phoneNumber);
             }
         }
 
