@@ -53,7 +53,8 @@ public class CallInterceptorService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if(isConnectedToInternet()){
+        //if(isConnectedToInternet()){
+        CallerInfoLog.d("Building View");
             SharedPreferences prefs = getApplicationContext().getSharedPreferences(Constants.CALLERINFOPREFS_FILE_NAME, Context.MODE_PRIVATE);
             if(prefs.contains(Constants.SERVICE_ENABLED_KEY) && prefs.getBoolean(Constants.SERVICE_ENABLED_KEY, false)) {
                 WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
@@ -61,6 +62,7 @@ public class CallInterceptorService extends Service {
                 wm.getDefaultDisplay().getMetrics(metrics);
                 int offset = 0;
                 if(prefs.contains(Constants.PERCENT_OFFSET_KEY)){
+                    CallerInfoLog.d("Setting offset");
                     int offsetPercent = prefs.getInt(Constants.PERCENT_OFFSET_KEY, 0);
                     int screenHeight = metrics.heightPixels;
                     Double offsetDouble = (double)screenHeight * ((double)offsetPercent / (double)100);
@@ -76,6 +78,7 @@ public class CallInterceptorService extends Service {
                 params.gravity = Gravity.TOP | Gravity.LEFT;
 
                 if(mView == null){
+                    CallerInfoLog.d("Building view pt2");
                     final LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                     mView = inflater.inflate(R.layout.activity_info, null);
                     mProgressBar = (ProgressBar)mView.findViewById(R.id.progress_bar);
@@ -94,7 +97,7 @@ public class CallInterceptorService extends Service {
 
                 new GetInfoByNumberTask().execute(phoneNumber);
             }
-        }
+        //}
 
         return START_STICKY;
     }
@@ -134,6 +137,7 @@ public class CallInterceptorService extends Service {
         protected String doInBackground(String... strings) {
             final StringBuilder builder = new StringBuilder();
             try{
+                CallerInfoLog.d("Calling service");
                 URL url = new URL("http://www.estateassistant.eu/PhoneCallInfo/WebService2.ashx");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setReadTimeout(10000);
@@ -141,20 +145,22 @@ public class CallInterceptorService extends Service {
                 conn.setRequestMethod("POST");
                 conn.setDoInput(true);
                 conn.setDoOutput(true);
-
+                CallerInfoLog.d("Setting params");
                 List<NameValuePair> params = new ArrayList<NameValuePair>();
                 params.add(new BasicNameValuePair("param1", "12312"));
                 params.add(new BasicNameValuePair("param2", strings[0]));
                 params.add(new BasicNameValuePair("param3", "715275712312"));
 
+
+                CallerInfoLog.d("Setting params");
                 OutputStream os = conn.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(
-                        new OutputStreamWriter(os, "UTF-8"));
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
                 writer.write(getQuery(params));
                 writer.flush();
                 writer.close();
                 os.close();
 
+                CallerInfoLog.d("Reading stream");
                 InputStream stream = conn.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 
@@ -164,6 +170,7 @@ public class CallInterceptorService extends Service {
                 }
 
             }catch(Exception e){
+                e.printStackTrace();
                 return null;
             }
             return builder.toString();
@@ -172,6 +179,7 @@ public class CallInterceptorService extends Service {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
+            CallerInfoLog.d("Showing data");
             mProgressBar.setVisibility(View.GONE);
             mScrollContainer.setVisibility(View.VISIBLE);
             if(!TextUtils.isEmpty(s)){
@@ -192,7 +200,7 @@ public class CallInterceptorService extends Service {
             WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
             wm.removeView(mView);
         }catch(Exception e){
-
+            e.printStackTrace();
         }
 
     }
