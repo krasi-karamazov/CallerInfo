@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="5dp"
     android:background="@android:color/white">
     <RelativeLayout
+        android:id="@+id/title_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <TextView
@@ -14,33 +15,42 @@
             android:text="@string/window_title"
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
             android:textSize="20sp"
+            android:textColor="@android:color/black"
             android:layout_toLeftOf="@+id/iv_close"/>
         <ImageView
             android:id="@+id/iv_close"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:scaleType="fitXY"
-            android:src="@android:drawable/ic_delete"/>
+            android:layout_alignParentRight="true"
+            android:src="@drawable/ic_close"/>
     </RelativeLayout>
+
+    <Button
+        android:id="@+id/but_force_load"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Force load"
+        android:layout_below="@+id/title_container"/>
 
     <ProgressBar
         android:id="@+id/progress_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_below="@+id/but_force_load"
+        android:layout_centerHorizontal="true"
         android:indeterminate="true"/>
     <ScrollView
         android:id="@+id/sc_content_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/but_force_load"
         android:layout_marginTop="5dp"
         android:orientation="vertical"
         android:scrollbars="vertical"
         android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:visibility="gone"
         android:fillViewport="true">
         <LinearLayout
             android:layout_width="match_parent"
@@ -56,4 +66,4 @@
 
     </ScrollView>
 
-</LinearLayout>
+</RelativeLayout>

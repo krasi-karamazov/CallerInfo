@@ -17,9 +17,11 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import org.apache.http.NameValuePair;
@@ -52,6 +54,8 @@ public class CallInterceptorService extends Service {
     private ProgressBar mProgressBar;
     private static final int TIMES_TO_TRY = 6;
     private int mTimesTried = 0;
+    private GetInfoByNumberTask mTask;
+    private String mPhoneNumber;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -84,17 +88,23 @@ public class CallInterceptorService extends Service {
                 mScrollContainer = (ScrollView)mView.findViewById(R.id.sc_content_container);
 
                 int height = metrics.heightPixels / 3;
-                final LinearLayout.LayoutParams contentParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, height);
+                RelativeLayout.LayoutParams contentParams = (RelativeLayout.LayoutParams)mScrollContainer.getLayoutParams();
+                if(contentParams == null){
+                    contentParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, height);
+                }
+                contentParams.height = height;
                 mScrollContainer.setLayoutParams(contentParams);
                 final ImageView ivClose = (ImageView)mView.findViewById(R.id.iv_close);
+                final Button butForceLoad = (Button)mView.findViewById(R.id.but_force_load);
+                butForceLoad.setOnClickListener(getOnClickListener());
                 ivClose.setOnClickListener(getOnClickListener());
                 mInfoTextView = (TextView)mView.findViewById(R.id.tv_info);
                 wm.addView(mView, params);
             }
 
-            String phoneNumber = intent.getStringExtra(INCOMING_NUMBER_KEY);
-            executeTask(phoneNumber);
-            new GetInfoByNumberTask().execute(phoneNumber);
+            mPhoneNumber = intent.getStringExtra(INCOMING_NUMBER_KEY);
+            mTask = new GetInfoByNumberTask();
+            mTask.execute(mPhoneNumber);
         }
         //}
 
@@ -105,23 +115,33 @@ public class CallInterceptorService extends Service {
         return new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
-                wm.removeView(mView);
+                switch (view.getId()){
+                    case R.id.iv_close:
+                        WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
+                        wm.removeView(mView);
+                        break;
+                    case R.id.but_force_load:
+                        if(mTask != null) {
+                            mTask.cancel(true);
+                            mTask = new GetInfoByNumberTask();
+                            mTask.execute(mPhoneNumber);
+                        }
+                        break;
+                }
             }
         };
     }
 
-    private String getQuery(List<NameValuePair> params) throws UnsupportedEncodingException
-    {
+    private String getQuery(List<NameValuePair> params) throws UnsupportedEncodingException {
         StringBuilder result = new StringBuilder();
         boolean first = true;
 
-        for (NameValuePair pair : params)
-        {
-            if (first)
+        for (NameValuePair pair : params) {
+            if (first){
                 first = false;
-            else
+            }else{
                 result.append("&");
+            }
 
             result.append(URLEncoder.encode(pair.getName(), "UTF-8"));
             result.append("=");
@@ -134,6 +154,7 @@ public class CallInterceptorService extends Service {
     private class GetInfoByNumberTask extends AsyncTask<String, Void, String>{
         @Override
         protected String doInBackground(String... strings) {
+            CallerInfoLog.d("Executing task");
             String result = executeTask(strings[0]);
 
             return result;
@@ -155,20 +176,30 @@ public class CallInterceptorService extends Service {
     }
     private String executeTask(String phoneNumber) {
         mTimesTried += 1;
+
+        CallerInfoLog.d("Tries = "  + mTimesTried);
         if(mTimesTried  > 1) {
             try{
-                Thread.sleep(200);
+                CallerInfoLog.d("Sleeping...");
+                Thread.sleep(2000);
             }catch(InterruptedException e){
                 e.printStackTrace();
             }
         }
+        CallerInfoLog.d("Done Sleeping...");
         String result = null;
+        if(mTimesTried == TIMES_TO_TRY) {
+            CallerInfoLog.d("tried 6 times quitting, result is " + result);
+            return result;
+        }
         try{
             result = getStringFromServer(phoneNumber);
         }catch(Exception e) {
+            e.printStackTrace();
             executeTask(phoneNumber);
         }
 
+        CallerInfoLog.d("Got result " + result);
         return result;
     }
 
@@ -176,8 +207,8 @@ public class CallInterceptorService extends Service {
         final StringBuilder builder = new StringBuilder();
         URL url = new URL("http://www.estateassistant.eu/PhoneCallInfo/WebService2.ashx");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setReadTimeout(5000);//10000);
-        conn.setConnectTimeout(10000);//15000);
+        conn.setReadTimeout(10000);
+        conn.setConnectTimeout(15000);
         conn.setRequestMethod("POST");
         conn.setDoInput(true);
         conn.setDoOutput(true);
@@ -188,8 +219,7 @@ public class CallInterceptorService extends Service {
         params.add(new BasicNameValuePair("param3", "715275712312"));
 
         OutputStream os = conn.getOutputStream();
-        BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(os, "UTF-8"));
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
         writer.write(getQuery(params));
         writer.flush();
         writer.close();
