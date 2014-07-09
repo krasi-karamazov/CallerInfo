@@ -34,7 +34,7 @@ public class CallerInfoPhoneStateListener extends PhoneStateListener {
                 break;
             case TelephonyManager.CALL_STATE_OFFHOOK:
 
-                CallerInfoLog.d("State offhook");
+                //CallerInfoLog.d("State offhook");
                 if (!wasRinging) {
                     mContext.stopService(intent);
                 } else {
@@ -44,7 +44,7 @@ public class CallerInfoPhoneStateListener extends PhoneStateListener {
                 wasRinging = true;
                 break;
             case TelephonyManager.CALL_STATE_IDLE:
-                CallerInfoLog.d("State idle");
+                //CallerInfoLog.d("State idle");
                 mContext.stopService(intent);
                 if(wasRinging){
                     mContext.stopService(intent);
