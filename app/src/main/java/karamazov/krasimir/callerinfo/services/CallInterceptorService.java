@@ -4,26 +4,24 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.IBinder;
-import android.text.Html;
-import android.text.Spanned;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
-import android.widget.TextView;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import java.io.BufferedReader;
@@ -49,8 +47,7 @@ public class CallInterceptorService extends Service {
     public static final String INCOMING_NUMBER_KEY = "incoming_number";
 
     private View mView;
-    private TextView mInfoTextView;
-    private ScrollView mScrollContainer;
+    private WebView mInfoView;
     private ProgressBar mProgressBar;
     private static final int TIMES_TO_TRY = 6;
     private int mTimesTried = 0;
@@ -58,55 +55,71 @@ public class CallInterceptorService extends Service {
     private String mPhoneNumber;
 
     @Override
+    public void onCreate() {
+        super.onCreate();
+        CallerInfoLog.d("On Create service");
+    }
+
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //if(isConnectedToInternet()){
+        if(intent.getExtras() != null){
+            CallerInfoLog.d("On Start Command Service Intent has extras");
             SharedPreferences prefs = getApplicationContext().getSharedPreferences(Constants.CALLERINFOPREFS_FILE_NAME, Context.MODE_PRIVATE);
-        if(prefs.contains(Constants.SERVICE_ENABLED_KEY) && prefs.getBoolean(Constants.SERVICE_ENABLED_KEY, false)) {
-            WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
-            final DisplayMetrics metrics = new DisplayMetrics();
-            wm.getDefaultDisplay().getMetrics(metrics);
-            int offset = 0;
-            if(prefs.contains(Constants.PERCENT_OFFSET_KEY)){
-                int offsetPercent = prefs.getInt(Constants.PERCENT_OFFSET_KEY, 0);
-                int screenHeight = metrics.heightPixels;
-                Double offsetDouble = (double)screenHeight * ((double)offsetPercent / (double)100);
-                offset  = offsetDouble.intValue();
-            }
-
-            WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT, 0, offset, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, 0, PixelFormat.TRANSLUCENT);
-            params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                    |WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
-                    |WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
-
-
-            params.gravity = Gravity.TOP | Gravity.LEFT;
-
-            if(mView == null){
-                final LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                mView = inflater.inflate(R.layout.activity_info, null);
-                mProgressBar = (ProgressBar)mView.findViewById(R.id.progress_bar);
-                mScrollContainer = (ScrollView)mView.findViewById(R.id.sc_content_container);
-
-                int height = metrics.heightPixels / 3;
-                RelativeLayout.LayoutParams contentParams = (RelativeLayout.LayoutParams)mScrollContainer.getLayoutParams();
-                if(contentParams == null){
-                    contentParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, height);
+            if(prefs.contains(Constants.SERVICE_ENABLED_KEY) && prefs.getBoolean(Constants.SERVICE_ENABLED_KEY, false)) {
+                WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
+                final DisplayMetrics metrics = new DisplayMetrics();
+                wm.getDefaultDisplay().getMetrics(metrics);
+                int offset = 0;
+                if(prefs.contains(Constants.PERCENT_OFFSET_KEY)){
+                    int offsetPercent = prefs.getInt(Constants.PERCENT_OFFSET_KEY, 0);
+                    int screenHeight = metrics.heightPixels;
+                    Double offsetDouble = (double)screenHeight * ((double)offsetPercent / (double)100);
+                    offset  = offsetDouble.intValue();
                 }
-                contentParams.height = height;
-                mScrollContainer.setLayoutParams(contentParams);
-                final ImageView ivClose = (ImageView)mView.findViewById(R.id.iv_close);
-                final Button butForceLoad = (Button)mView.findViewById(R.id.but_force_load);
-                butForceLoad.setOnClickListener(getOnClickListener());
-                ivClose.setOnClickListener(getOnClickListener());
-                mInfoTextView = (TextView)mView.findViewById(R.id.tv_info);
-                wm.addView(mView, params);
-            }
 
-            mPhoneNumber = intent.getStringExtra(INCOMING_NUMBER_KEY);
-            mTask = new GetInfoByNumberTask();
-            mTask.execute(mPhoneNumber);
+                WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT, 0, offset, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, 0, PixelFormat.TRANSLUCENT);
+                params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                        |WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+                        |WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+
+
+                params.gravity = Gravity.TOP | Gravity.LEFT;
+
+                if(mView == null){
+                    final LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    mView = inflater.inflate(R.layout.activity_info, null);
+                    mProgressBar = (ProgressBar)mView.findViewById(R.id.progress_bar);
+                    mInfoView = (WebView)mView.findViewById(R.id.wv_data);
+
+                    int height = metrics.heightPixels / 3;
+                    if(prefs.contains(Constants.PERCENT_HEIGHT_KEY)){
+                        int percent = prefs.getInt(Constants.PERCENT_HEIGHT_KEY, 0);
+                        Double heightDouble = (double)metrics.heightPixels * ((double)percent / (double)100);
+                        height = heightDouble.intValue();
+                    }
+
+                    RelativeLayout.LayoutParams contentParams = (RelativeLayout.LayoutParams)mInfoView.getLayoutParams();
+                    if(contentParams == null){
+                        contentParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, height);
+                    }
+                    contentParams.height = height;
+                    mInfoView.setLayoutParams(contentParams);
+                    final ImageView ivClose = (ImageView)mView.findViewById(R.id.iv_close);
+
+                    ivClose.setOnClickListener(getOnClickListener());
+                    WebSettings settings = mInfoView.getSettings();
+                    settings.setDefaultTextEncodingName("utf-8");
+                    wm.addView(mView, params);
+
+                }
+
+                mPhoneNumber = intent.getStringExtra(INCOMING_NUMBER_KEY);
+                mTask = new GetInfoByNumberTask();
+                mTask.execute(mPhoneNumber);
+            }
+        }else{
+            CallerInfoLog.d("On Start Command Service Intent has no extras");
         }
-        //}
 
         return START_STICKY;
     }
@@ -119,13 +132,6 @@ public class CallInterceptorService extends Service {
                     case R.id.iv_close:
                         WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
                         wm.removeView(mView);
-                        break;
-                    case R.id.but_force_load:
-                        if(mTask != null) {
-                            mTask.cancel(true);
-                            mTask = new GetInfoByNumberTask();
-                            mTask.execute(mPhoneNumber);
-                        }
                         break;
                 }
             }
@@ -164,13 +170,10 @@ public class CallInterceptorService extends Service {
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             mProgressBar.setVisibility(View.GONE);
-            mScrollContainer.setVisibility(View.VISIBLE);
             if(!TextUtils.isEmpty(s)){
-                Spanned htmlContent = Html.fromHtml(s);
-                mInfoTextView.setText(htmlContent);
-                mScrollContainer.requestLayout();
+                mInfoView.loadData(s, "text/html; charset=utf-8", "UTF-8");
             }else{
-                mInfoTextView.setText("Could not download data");
+                mInfoView.loadData("Could not download data", "text/html; charset=utf-8", "utf-8");
             }
         }
     }
@@ -242,10 +245,10 @@ public class CallInterceptorService extends Service {
         try{
             WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
             wm.removeView(mView);
+            mTask.cancel(true);
         }catch(Exception e){
 
         }
-
     }
 
     private boolean isConnectedToInternet() {

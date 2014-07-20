@@ -9,4 +9,5 @@
     <string name="offset_percent_label">Offset from top (%)</string>
     <string name="done">Done</string>
     <string name="window_title">Estate Assistant</string>
+    <string name="percent_from_height_label">Height (percent from screen height)</string>
 </resources>

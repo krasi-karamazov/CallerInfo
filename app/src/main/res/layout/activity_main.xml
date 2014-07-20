@@ -56,6 +56,28 @@
                 android:maxLength="3"
                 android:inputType="number"/>
         </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:layout_marginTop="15dp"
+            android:layout_gravity="center_horizontal">
+            <TextView
+                android:id="@+id/tv_percent_from_screen_height_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:singleLine="true"
+                android:text="@string/percent_from_height_label"/>
+            <EditText
+                android:id="@+id/et_percent_from_screen_height"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:maxLength="3"
+                android:inputType="number"/>
+        </LinearLayout>
     </LinearLayout>
 
 

@@ -2,7 +2,7 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:padding="5dp"
     android:background="@android:color/white">
     <RelativeLayout
@@ -28,42 +28,28 @@
             android:src="@drawable/ic_close"/>
     </RelativeLayout>
 
-    <Button
-        android:id="@+id/but_force_load"
+    <View
+        android:id="@+id/separator"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/title_container"
+        android:background="@color/caller_info_black"/>
+
+
+    <WebView
+        android:id="@+id/wv_data"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Force load"
-        android:layout_below="@+id/title_container"/>
-
+        android:layout_below="@+id/separator"
+        android:layout_marginTop="5dp"
+        />
     <ProgressBar
         android:id="@+id/progress_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/but_force_load"
         android:layout_centerHorizontal="true"
-        android:indeterminate="true"/>
-    <ScrollView
-        android:id="@+id/sc_content_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/but_force_load"
+        android:layout_below="@id/separator"
         android:layout_marginTop="5dp"
-        android:orientation="vertical"
-        android:scrollbars="vertical"
-        android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:fillViewport="true">
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            >
-            <TextView
-                android:id="@+id/tv_info"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@android:color/black"
-                android:textSize="15sp"/>
-        </LinearLayout>
-
-    </ScrollView>
-
+        android:indeterminate="true"/>
 </RelativeLayout>
