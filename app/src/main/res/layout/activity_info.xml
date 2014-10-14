@@ -2,13 +2,54 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <TextView
-        android:id="@+id/tv_info"
+    android:layout_height="match_parent"
+    android:padding="5dp"
+    android:background="@android:color/white">
+    <RelativeLayout
+        android:id="@+id/title_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/window_title"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:textSize="20sp"
+            android:textColor="@android:color/black"
+            android:layout_toLeftOf="@+id/iv_close"/>
+        <ImageView
+            android:id="@+id/iv_close"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:scaleType="fitXY"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/ic_close"/>
+    </RelativeLayout>
+
+    <View
+        android:id="@+id/separator"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/title_container"
+        android:background="@color/caller_info_black"/>
+
+
+    <WebView
+        android:id="@+id/wv_data"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/black"
-        android:textSize="15sp"
-        android:layout_centerInParent="true"
-        android:text="jfhjskhfhsjkfhjsdhfjksdf"/>
+        android:layout_below="@+id/separator"
+        android:layout_marginTop="5dp"
+        />
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/separator"
+        android:layout_marginTop="5dp"
+        android:indeterminate="true"/>
 </RelativeLayout>
